@@ -1,0 +1,18 @@
+{
+  "id": 1,
+  "title": "The Great Gatsby",
+  "author": {
+    "name": "F. Scott Fitzgerald"
+  },
+  "published": {
+    "year": 1925
+  },
+  "genres": [
+    {
+      "type": "novel"
+    },
+    {
+      "type": "fiction"
+    }
+  ]
+}
