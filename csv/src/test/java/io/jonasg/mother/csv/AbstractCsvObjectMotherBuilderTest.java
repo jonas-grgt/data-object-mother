@@ -107,4 +107,43 @@ class AbstractCsvObjectMotherBuilderTest {
 				Alexander Pushkin,The Prophet,Novel in Verse
 				Nikolai Gogol,Dead Souls,Satirical Novel""");
 	}
+
+	@Test
+	void withRowColumnValueThrowsWhenColumnNotFound() {
+		// given
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
+
+		// when & then
+		assertThatThrownBy(() -> libraryBuilder
+				.withRowColumnValue(0, "unknownColumn", "value"))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Column 'unknownColumn' not found");
+	}
+
+	@Test
+	void withRowColumnValueThrowsWhenRowIndexOutOfBounds() {
+		// given
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
+
+		// when & then
+		assertThatThrownBy(() -> libraryBuilder
+				.withRowColumnValue(100, "title", "value"))
+				.isInstanceOf(IndexOutOfBoundsException.class)
+				.hasMessageContaining("is out of bounds");
+	}
+
+	@Test
+	void withRowColumnValueByPredicateThrowsWhenNoMatch() {
+		// given
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
+
+		// when & then
+		assertThatThrownBy(() -> libraryBuilder
+				.withRowColumnValue(
+						r -> "NonExistent".equals(r.column("title")),
+						"title",
+						"value"))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("No row found matching the given predicate");
+	}
 }

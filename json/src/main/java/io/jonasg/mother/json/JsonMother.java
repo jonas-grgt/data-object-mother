@@ -11,17 +11,37 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+/**
+ * A utility class for building JSON objects - as string - based on an existing
+ * file.
+ * It allows for modifying properties of the JSON structure using dot notation
+ * for nested properties and array indexing.
+ */
 public class JsonMother {
 
 	private final static ObjectMapper objectMapper = new ObjectMapper();
 
 	private final ObjectNode rootNode;
 
+	/**
+	 * Creates a new JsonMother instance by loading a JSON file from the classpath.
+	 * 
+	 * @param filePath
+	 *            the path to the JSON file in the classpath (e.g.,
+	 *            "data/sample.json")
+	 * @return a new JsonMother instance initialized with the content of the
+	 *         specified JSON file
+	 * @throws IllegalArgumentException
+	 *             if the file cannot be found, or if the content is not a JSON
+	 *             object
+	 * @throws RuntimeException
+	 *             if there is an error processing the JSON content
+	 */
 	public static JsonMother of(String filePath) {
 		return new JsonMother(filePath);
 	}
 
-	public JsonMother(String filePath) {
+	protected JsonMother(String filePath) {
 		try (var reader = readerForFile(filePath)) {
 			JsonNode tempRoot = objectMapper.readTree(reader);
 			if (tempRoot.isObject()) {
@@ -34,8 +54,26 @@ public class JsonMother {
 		}
 	}
 
-	public JsonMother withProperty(@Nullable String field, @Nullable Object value) {
-		if (field == null || field.isEmpty()) {
+	/**
+	 * Sets a property in the JSON structure.
+	 * </p>
+	 * The field parameter supports dot notation for nested properties and array
+	 * indexing. For example:
+	 * <ul>
+	 * <li>"author.name" sets the "name" property of the "author" object.</li>
+	 * <li>"genres[0].type" sets the "type" property of the first element in the
+	 * "genres" array.</li>
+	 * </ul>
+	 * 
+	 * @param field
+	 *            the property path in dot notation, supporting nested properties
+	 *            and array indexing
+	 * @param value
+	 *            the value to set for the specified property
+	 * @return the current JsonMother instance for method chaining
+	 */
+	public JsonMother withProperty(String field, @Nullable Object value) {
+		if (field.isEmpty()) {
 			throw new IllegalArgumentException("Property path cannot be null or empty");
 		}
 
@@ -82,8 +120,16 @@ public class JsonMother {
 		return this;
 	}
 
-	public JsonMother withRemovedProperty(@Nullable String property) {
-		if (property == null || property.isEmpty()) {
+	/**
+	 * Completely removes a property from the JSON structure.
+	 * 
+	 * @param property
+	 *            the property path in dot notation, supporting nested properties
+	 *            and array indexing (e.g., "author.name" or "genres[0].type")
+	 * @return the current JsonMother instance for method chaining
+	 */
+	public JsonMother withRemovedProperty(String property) {
+		if (property.isEmpty()) {
 			throw new IllegalArgumentException("Property path cannot be null or empty");
 		}
 
@@ -115,6 +161,17 @@ public class JsonMother {
 		return this;
 	}
 
+	/**
+	 * Builds the final JSON string based on the current state of the JSON
+	 * structure.
+	 * 
+	 * @return the JSON string representation of the current state of the
+	 *         (customized) JSON structure
+	 */
+	public String build() {
+		return rootNode.toString();
+	}
+
 	private boolean isArray(String part) {
 		int idx = part.indexOf('[');
 		return idx > 0
@@ -122,10 +179,6 @@ public class JsonMother {
 				&& part.charAt(idx + 1) >= '0'
 				&& part.charAt(idx + 1) <= '9'
 				&& part.charAt(idx + 2) == ']';
-	}
-
-	public String build() {
-		return rootNode.toString();
 	}
 
 	private Reader readerForFile(String filePath) {
