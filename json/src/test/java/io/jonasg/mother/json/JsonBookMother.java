@@ -1,6 +1,7 @@
-package io.jonasg;
+package io.jonasg.mother.json;
 
-public class BookMother {
+public class JsonBookMother {
+
 	public static Builder book() {
 		return new Builder("mother-data/book.json");
 	}

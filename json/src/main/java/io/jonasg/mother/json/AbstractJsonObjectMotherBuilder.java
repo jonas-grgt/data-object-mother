@@ -1,10 +1,9 @@
-package io.jonasg;
+package io.jonasg.mother.json;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -18,14 +17,14 @@ public abstract class AbstractJsonObjectMotherBuilder<T extends AbstractJsonObje
 	private final ObjectNode rootNode;
 
 	public AbstractJsonObjectMotherBuilder(String filePath) {
-		try {
-			JsonNode tempRoot = objectMapper.readTree(loadFileContents(filePath));
+		try (var reader = readerForFile(filePath)) {
+			JsonNode tempRoot = objectMapper.readTree(reader);
 			if (tempRoot.isObject()) {
 				rootNode = (ObjectNode) tempRoot;
 			} else {
 				throw new IllegalArgumentException("Only JSON objects as content are supported.");
 			}
-		} catch (JsonProcessingException e) {
+		} catch (IOException e) {
 			throw new RuntimeException("Error processing JSON", e);
 		}
 	}
@@ -109,18 +108,11 @@ public abstract class AbstractJsonObjectMotherBuilder<T extends AbstractJsonObje
 		return rootNode.toString();
 	}
 
-	private String loadFileContents(String filePath) {
-
-		InputStream resourceAsStream = this.getClass().getClassLoader().getResourceAsStream(filePath);
-
-		if (resourceAsStream == null) {
+	private Reader readerForFile(String filePath) {
+		var inputStream = this.getClass().getClassLoader().getResourceAsStream(filePath);
+		if (inputStream == null) {
 			throw new RuntimeException("Unable to open file " + filePath);
 		}
-
-		try {
-			return new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8);
-		} catch (IOException e) {
-			throw new RuntimeException("Unable to open file " + filePath);
-		}
+		return new InputStreamReader(inputStream);
 	}
 }

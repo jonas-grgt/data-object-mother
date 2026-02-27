@@ -1,18 +1,18 @@
-package io.jonasg;
+package io.jonasg.mother.json;
 
 import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 
-import io.jonasg.BookMother.Builder;
+import io.jonasg.mother.json.JsonBookMother.Builder;
 
 class AbstractJsonObjectMotherBuilderTest {
 
 	@Test
 	void overrideExistingProperty() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
@@ -45,7 +45,7 @@ class AbstractJsonObjectMotherBuilderTest {
 	@Test
 	void overrideExistingNestedProperty() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
@@ -78,7 +78,7 @@ class AbstractJsonObjectMotherBuilderTest {
 	@Test
 	void removeExistingProperty() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
@@ -110,7 +110,7 @@ class AbstractJsonObjectMotherBuilderTest {
 	@Test
 	void removeExistingNestedProperty() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
@@ -141,11 +141,11 @@ class AbstractJsonObjectMotherBuilderTest {
 	@Test
 	void removeElementFromArray() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
-				.withRemovedProperty("genres[0]")
+				.withRemovedProperty("genres[1]")
 				.build();
 
 		// then
@@ -161,7 +161,7 @@ class AbstractJsonObjectMotherBuilderTest {
 				  },
 				  "genres": [
 				    {
-				      "type": "fiction"
+				      "type": "novel"
 				    }
 				  ]
 				}
@@ -171,7 +171,7 @@ class AbstractJsonObjectMotherBuilderTest {
 	@Test
 	void addNewProperty() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
@@ -205,7 +205,7 @@ class AbstractJsonObjectMotherBuilderTest {
 	@Test
 	void addNewNestedProperty() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
@@ -239,9 +239,9 @@ class AbstractJsonObjectMotherBuilderTest {
 	}
 
 	@Test
-	void addMultipleNewNestedPropertiesAtSomeLevel() throws JSONException {
+	void addMultipleNewNestedPropertiesAtTheSameLevel() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
@@ -279,7 +279,7 @@ class AbstractJsonObjectMotherBuilderTest {
 	@Test
 	void addNewObjectToArrayElement() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
@@ -315,11 +315,12 @@ class AbstractJsonObjectMotherBuilderTest {
 	@Test
 	void addNewObjectToNewArrayElement() throws JSONException {
 		// given
-		Builder bookBuilder = BookMother.book();
+		Builder bookBuilder = JsonBookMother.book();
 
 		// when
 		String actual = bookBuilder
 				.withProperty("translations[0].language", "French")
+				.withProperty("translations[1].language", "Spanish")
 				.build();
 
 		// then
@@ -344,6 +345,9 @@ class AbstractJsonObjectMotherBuilderTest {
 				       "translations": [
 				         {
 				           "language": "French"
+				         },
+				         {
+				           "language": "Spanish"
 				         }
 				       ]
 				}
