@@ -75,12 +75,12 @@ String csv = CsvMother.of("books.csv")
     .build();
 
 // Add a new row (string-based)
-String csvWithRow = CsvMother.from("books.csv")
+String csvWithRow = CsvMother.of("books.csv")
     .withRow("Author Name,Book Title,Genre")
     .build();
 
 // Add a new row (builder-based)
-String csvWithRow = CsvMother.from("books.csv")
+String csvWithRow = CsvMother.of("books.csv")
     .withRow(builder -> builder
         .withColumn("Author Name")
         .withColumn("Book Title")
@@ -88,12 +88,12 @@ String csvWithRow = CsvMother.from("books.csv")
     .build();
 
 // Modify column value by row index (0-based)
-String csvModified = CsvMother.from("books.csv")
+String csvModified = CsvMother.of("books.csv")
     .withRowColumnValue(0, "title", "Modified Title")
     .build();
 
 // Modify column value by predicate (first matching row)
-String csvModified = CsvMother.from("books.csv")
+String csvModified = CsvMother.of("books.csv")
     .withRowColumnValue(
         row -> "War and Peace".equals(row.column("title")),
         "author",
@@ -160,5 +160,116 @@ public class BookLibraryMother extends CsvMother {
 String csv = BookLibraryMother.library()
     .withFirstTitle("New Title")           // Custom DSL
     .withRow("New Author,New Book,Genre")  // Still available
+    .build();
+```
+
+---
+
+## xml-object-mother 📝
+
+The `XmlMother` class provides functionality for manipulating XML data
+during testing. It allows loading XML files, modifying elements and attributes,
+and removing elements using XPath expressions.
+
+### Quick start 📝
+
+```java
+// Load XML from file
+String xml = XmlMother.of("book.xml")
+    .build();
+
+// Modify element text using XPath
+String xmlModified = XmlMother.of("book.xml")
+    .withElement("//title", "New Title")
+    .build();
+
+// Modify nested element
+String xmlModified = XmlMother.of("book.xml")
+    .withElement("//author/name", "Jane Doe")
+    .build();
+
+// Modify indexed element (XPath is 1-based)
+String xmlModified = XmlMother.of("book.xml")
+    .withElement("//genres/genre[1]/type", "classic")
+    .build();
+
+// Set attribute on root element
+String xmlModified = XmlMother.of("book.xml")
+    .withAttribute("", "id", "123")
+    .build();
+
+// Set attribute using XPath
+String xmlModified = XmlMother.of("book.xml")
+    .withElement("//@id", "456")
+    .build();
+
+// Set attribute on child element
+String xmlModified = XmlMother.of("book.xml")
+    .withElement("//author/@type", "novelist")
+    .build();
+
+// Remove element
+String xmlModified = XmlMother.of("book.xml")
+    .withRemovedElement("//title")
+    .build();
+
+// Remove nested element
+String xmlModified = XmlMother.of("book.xml")
+    .withRemovedElement("//author/name")
+    .build();
+```
+
+#### Available methods 🔧
+
+- `withElement(String xpath, Object value)` - Set element text or attribute using XPath
+  - Element: `"//title"`, `"//author/name"`
+  - Indexed (1-based): `"//genres/genre[1]/type"`
+  - Attribute on root: `"//@id"`
+  - Attribute on child: `"//author/@type"`
+- `withAttribute(String xpath, String attrName, Object value)` - Set attribute explicitly
+  - Empty path for root element: `""`
+  - XPath for element: `"//author"`
+- `withRemovedElement(String xpath)` - Remove element by XPath
+- `build()` - Returns the modified XML as a string
+
+#### XPath examples 📍
+
+| XPath | Description |
+|-------|-------------|
+| `//title` | Select title element |
+| `//author/name` | Select name element under author |
+| `//genres/genre[1]` | Select first genre element (1-based) |
+| `//@id` | Select id attribute on root |
+| `//author/@type` | Select type attribute on author element |
+
+#### Extending for custom DSL 📦
+
+If you need a custom DSL, extend `XmlMother`:
+
+```java
+public class BookXmlMother extends XmlMother {
+
+    public static BookXmlMother book() {
+        return new BookXmlMother("mother-data/book.xml");
+    }
+
+    public BookXmlMother(String filePath) {
+        super(filePath);
+    }
+
+    // Custom DSL methods
+    public BookXmlMother withTitle(String title) {
+        return (BookXmlMother) withElement("//title", title);
+    }
+
+    public BookXmlMother withAuthorName(String name) {
+        return (BookXmlMother) withElement("//author/name", name);
+    }
+}
+
+// Usage
+String xml = BookXmlMother.book()
+    .withTitle("New Title")           // Custom DSL
+    .withElement("//genres/genre[1]/type", "classic")  // Still available
     .build();
 ```
