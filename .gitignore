@@ -3,6 +3,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Maven ###
+.flattened-pom.xml
+
 ### IntelliJ IDEA ###
 .idea/
 *.iws
@@ -33,3 +36,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Jreleaser
+out/
+trace.log
