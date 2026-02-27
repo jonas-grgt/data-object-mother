@@ -12,6 +12,7 @@
     <modules>
         <module>json</module>
         <module>csv</module>
+        <module>xml</module>
     </modules>
 
     <properties>
@@ -22,6 +23,7 @@
         <junit-bom.version>6.0.3</junit-bom.version>
         <assertj-core.version>3.27.7</assertj-core.version>
         <jsonassert.version>1.5.3</jsonassert.version>
+        <xmlunit.version>2.10.2</xmlunit.version>
         <jackson.version>2.21.1</jackson.version>
         <opencsv.version>5.12.0</opencsv.version>
         <jspecify.version>1.0.0</jspecify.version>
@@ -41,6 +43,11 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-xml</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
@@ -65,6 +72,12 @@
                 <groupId>com.opencsv</groupId>
                 <artifactId>opencsv</artifactId>
                 <version>${opencsv.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xmlunit</groupId>
+                <artifactId>xmlunit-assertj</artifactId>
+                <version>${xmlunit.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
