@@ -10,13 +10,17 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public abstract class AbstractJsonObjectMotherBuilder<T extends AbstractJsonObjectMotherBuilder<T>> {
+public class JsonMother {
 
 	private final static ObjectMapper objectMapper = new ObjectMapper();
 
 	private final ObjectNode rootNode;
 
-	public AbstractJsonObjectMotherBuilder(String filePath) {
+	public static JsonMother of(String filePath) {
+		return new JsonMother(filePath);
+	}
+
+	public JsonMother(String filePath) {
 		try (var reader = readerForFile(filePath)) {
 			JsonNode tempRoot = objectMapper.readTree(reader);
 			if (tempRoot.isObject()) {
@@ -29,8 +33,7 @@ public abstract class AbstractJsonObjectMotherBuilder<T extends AbstractJsonObje
 		}
 	}
 
-	@SuppressWarnings({ "unchecked", "UnusedReturnValue" })
-	public T withProperty(String field, Object value) {
+	public JsonMother withProperty(String field, Object value) {
 		String[] parts = field.split("\\.");
 		JsonNode current = rootNode;
 
@@ -68,11 +71,10 @@ public abstract class AbstractJsonObjectMotherBuilder<T extends AbstractJsonObje
 			((ObjectNode) current).putPOJO(key, value);
 		}
 
-		return (T) this;
+		return this;
 	}
 
-	@SuppressWarnings({ "unchecked", "UnusedReturnValue" })
-	public T withRemovedProperty(String property) {
+	public JsonMother withRemovedProperty(String property) {
 		String[] parts = property.split("\\.");
 		JsonNode current = rootNode;
 
@@ -97,7 +99,7 @@ public abstract class AbstractJsonObjectMotherBuilder<T extends AbstractJsonObje
 			}
 		}
 
-		return (T) this;
+		return this;
 	}
 
 	private boolean isArray(String part) {

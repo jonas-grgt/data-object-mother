@@ -10,7 +10,7 @@ class AbstractCsvObjectMotherBuilderTest {
 	@Test
 	void buildWithoutModification() {
 		// given
-		var libraryBuilder = CsvBookLibraryMother.library();
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
 
 		// when
 		String actual = libraryBuilder.build();
@@ -27,7 +27,7 @@ class AbstractCsvObjectMotherBuilderTest {
 	@Test
 	void withCustomStringBasedRow() {
 		// given
-		var libraryBuilder = CsvBookLibraryMother.library();
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
 
 		// when
 		String actual = libraryBuilder
@@ -47,7 +47,7 @@ class AbstractCsvObjectMotherBuilderTest {
 	@Test
 	void withAdjustedColumnValueForRowByIndex() {
 		// given
-		var libraryBuilder = CsvBookLibraryMother.library();
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
 
 		// when
 		String actual = libraryBuilder
@@ -66,7 +66,7 @@ class AbstractCsvObjectMotherBuilderTest {
 	@Test
 	void withAdjustedColumnValueForRowByFilter() {
 		// given
-		var libraryBuilder = CsvBookLibraryMother.library();
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
 
 		// when
 		String actual = libraryBuilder

@@ -2,7 +2,6 @@ package io.jonasg.mother.csv;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,48 +11,49 @@ import java.util.function.Predicate;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
 
-public abstract class AbstractCsvObjectMotherBuilder<T extends AbstractCsvObjectMotherBuilder<T>> {
+public class CsvMother {
 
 	private String[] headers;
 	private final List<Row> rows = new ArrayList<>();
 	private final List<String[]> pendingRows = new ArrayList<>();
 
-	public AbstractCsvObjectMotherBuilder(String filePath) {
+	public static CsvMother of(String filePath) {
+		return new CsvMother(filePath);
+	}
+
+	public CsvMother(String filePath) {
 		parseCsv(filePath);
 	}
 
-	@SuppressWarnings("unchecked")
-	public T withRow(String line) {
+	public CsvMother withRow(String line) {
 		pendingRows.add(line.split(","));
-		return (T) this;
+		return this;
 	}
 
-	@SuppressWarnings("unchecked")
-	public T withRow(Consumer<LineBuilder> columnBuilderConsumer) {
+	public CsvMother withRow(Consumer<LineBuilder> columnBuilderConsumer) {
 		var lineBuilder = new LineBuilder();
 		columnBuilderConsumer.accept(lineBuilder);
 		String[] values = lineBuilder.build().split(",", -1);
 		pendingRows.add(values);
-		return (T) this;
+		return this;
 	}
 
-	@SuppressWarnings("unchecked")
-	public T withRowColumnValue(Integer rowIndex, String column, Object value) {
+	public CsvMother withRowColumnValue(Integer rowIndex, String column, Object value) {
 		if (rowIndex >= 0 && rowIndex < rows.size()) {
 			Row row = rows.get(rowIndex);
 			setColumnValue(row, column, value);
 		}
-		return (T) this;
+		return this;
 	}
 
-	public T withRowColumnValue(Predicate<Row> predicate, String column, Object value) {
+	public CsvMother withRowColumnValue(Predicate<Row> predicate, String column, Object value) {
 		for (Row row : rows) {
 			if (predicate.test(row)) {
 				setColumnValue(row, column, value);
 				break;
 			}
 		}
-		return (T) this;
+		return this;
 	}
 
 	private void setColumnValue(Row row, String columnName, Object value) {
@@ -88,7 +88,7 @@ public abstract class AbstractCsvObjectMotherBuilder<T extends AbstractCsvObject
 			if (is == null) {
 				throw new RuntimeException("Unable to open file " + filePath);
 			}
-			List<String[]> allLines = new CSVReader(new InputStreamReader(is, StandardCharsets.UTF_8))
+			List<String[]> allLines = new CSVReader(new java.io.InputStreamReader(is, StandardCharsets.UTF_8))
 					.readAll();
 
 			if (!allLines.isEmpty()) {

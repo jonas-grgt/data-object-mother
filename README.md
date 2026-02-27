@@ -2,36 +2,16 @@
 
 ## json-object-mother 📄
 
-The `AbstractJsonObjectMotherBuilder` class provides a flexible mechanism for
+The `JsonMother` class provides a flexible mechanism for
 manipulating JSON objects during testing. This library facilitates the creation,
 modification, and validation of JSON structures, making it easier to test JSON-dependent
 components in your Java applications. 
 
-### Example usage 📝
-
-#### Define a JSON data mother
-
-```java
-public class JsonBookMother {
-
-    public static Builder book() {
-        return new Builder("mother-data/book.json");
-    }
-
-    public static class Builder extends AbstractJsonObjectMotherBuilder<Builder> {
-
-        public Builder(String filePath) {
-            super(filePath);
-        }
-    }
-}
-```
-
-#### Use the JSON data mother
+### Quick start 📝
 
 ```java
 // Load JSON from file and modify properties
-String json = JsonBookMother.book()
+String json = JsonMother.of("book.json")
     .withProperty("title", "New Title")
     .withProperty("author.name", "Jane Doe")
     .withProperty("tags[0]", "fiction")
@@ -47,48 +27,60 @@ String json = JsonBookMother.book()
 - `withRemovedProperty(String path)` - Remove a property
 - `build()` - Returns the modified JSON as a string
 
+#### Extending for custom DSL 📦
+
+If you need a custom DSL, extend `JsonMother`:
+
+```java
+public class BookMother extends JsonMother {
+
+    public static BookMother book() {
+        return new BookMother("mother-data/book.json");
+    }
+
+    public BookMother(String filePath) {
+        super(filePath);
+    }
+
+    // Custom DSL methods
+    public BookMother withTitle(String title) {
+        return (BookMother) withProperty("title", title);
+    }
+
+    public BookMother withAuthorName(String name) {
+        return (BookMother) withProperty("author.name", name);
+    }
+}
+
+// Usage
+String json = BookMother.book()
+    .withTitle("New Title")           // Custom DSL
+    .withProperty("tags", "fiction")  // Still available
+    .build();
+```
+
 ---
 
 ## csv-object-mother 📊
 
-The `AbstractCsvObjectMotherBuilder` class provides functionality for manipulating CSV data
+The `CsvMother` class provides functionality for manipulating CSV data
 during testing. It allows loading CSV files, adding new rows, and modifying existing
 column values.
 
-### Example usage 📝
-
-#### Define a CSV data mother
-
-```java
-public class CsvBookLibraryMother {
-
-    public static Builder library() {
-        return new Builder("mother-data/books.csv");
-    }
-
-    public static class Builder extends AbstractCsvObjectMotherBuilder<Builder> {
-
-        public Builder(String filePath) {
-            super(filePath);
-        }
-    }
-}
-```
-
-#### Use the CSV data mother
+### Quick start 📝
 
 ```java
 // Load CSV from file
-String csv = CsvBookLibraryMother.library()
+String csv = CsvMother.of("books.csv")
     .build();
 
 // Add a new row (string-based)
-String csvWithRow = CsvBookLibraryMother.library()
+String csvWithRow = CsvMother.from("books.csv")
     .withRow("Author Name,Book Title,Genre")
     .build();
 
 // Add a new row (builder-based)
-String csvWithRow = CsvBookLibraryMother.library()
+String csvWithRow = CsvMother.from("books.csv")
     .withRow(builder -> builder
         .withColumn("Author Name")
         .withColumn("Book Title")
@@ -96,12 +88,12 @@ String csvWithRow = CsvBookLibraryMother.library()
     .build();
 
 // Modify column value by row index (0-based)
-String csvModified = CsvBookLibraryMother.library()
+String csvModified = CsvMother.from("books.csv")
     .withRowColumnValue(0, "title", "Modified Title")
     .build();
 
 // Modify column value by predicate (first matching row)
-String csvModified = CsvBookLibraryMother.library()
+String csvModified = CsvMother.from("books.csv")
     .withRowColumnValue(
         row -> "War and Peace".equals(row.column("title")),
         "author",
@@ -109,7 +101,7 @@ String csvModified = CsvBookLibraryMother.library()
     .build();
 
 // Combine operations
-String csv = CsvBookLibraryMother.library()
+String csv = CsvMother.of("books.csv")
     .withRowColumnValue(0, "title", "New Title")
     .withRow("New Author,New Book,New Genre")
     .build();
@@ -125,8 +117,6 @@ String csv = CsvBookLibraryMother.library()
 
 #### Row predicate usage 🔍
 
-The predicate-based method allows filtering rows:
-
 ```java
 // Find row where title equals "War and Peace"
 .withRowColumnValue(
@@ -139,4 +129,36 @@ The predicate-based method allows filtering rows:
     row -> row.column("genre").contains("Novel"),
     "genre",
     "Classic Novel")
+```
+
+#### Extending for custom DSL 📦
+
+If you need a custom DSL, extend `CsvMother`:
+
+```java
+public class BookLibraryMother extends CsvMother {
+
+    public static BookLibraryMother library() {
+        return new BookLibraryMother("mother-data/books.csv");
+    }
+
+    public BookLibraryMother(String filePath) {
+        super(filePath);
+    }
+
+    // Custom DSL methods
+    public BookLibraryMother withFirstAuthor(String author) {
+        return (BookLibraryMother) withRowColumnValue(0, "author", author);
+    }
+
+    public BookLibraryMother withFirstTitle(String title) {
+        return (BookLibraryMother) withRowColumnValue(0, "title", title);
+    }
+}
+
+// Usage
+String csv = BookLibraryMother.library()
+    .withFirstTitle("New Title")           // Custom DSL
+    .withRow("New Author,New Book,Genre")  // Still available
+    .build();
 ```

@@ -1,15 +1,20 @@
 package io.jonasg.mother.csv;
 
-public class CsvBookLibraryMother {
-	public static Builder library() {
-		return new Builder("mother-data/books.csv");
+public class CsvBookLibraryMother extends CsvMother {
+
+	public static CsvBookLibraryMother library() {
+		return new CsvBookLibraryMother("mother-data/books.csv");
 	}
 
-	public static class Builder extends AbstractCsvObjectMotherBuilder<Builder> {
-
-		public Builder(String filePath) {
-			super(filePath);
-		}
+	public CsvBookLibraryMother(String filePath) {
+		super(filePath);
 	}
 
+	public CsvBookLibraryMother withAuthor(String author) {
+		return (CsvBookLibraryMother) withRowColumnValue(0, "author", author);
+	}
+
+	public CsvBookLibraryMother withTitle(String title) {
+		return (CsvBookLibraryMother) withRowColumnValue(0, "title", title);
+	}
 }

@@ -1,15 +1,20 @@
 package io.jonasg.mother.json;
 
-public class JsonBookMother {
+public class JsonBookMother extends JsonMother {
 
-	public static Builder book() {
-		return new Builder("mother-data/book.json");
+	public static JsonBookMother book() {
+		return new JsonBookMother("mother-data/book.json");
 	}
 
-	public static class Builder extends AbstractJsonObjectMotherBuilder<Builder> {
+	public JsonBookMother(String filePath) {
+		super(filePath);
+	}
 
-		public Builder(String filePath) {
-			super(filePath);
-		}
+	public JsonBookMother withTitle(String title) {
+		return (JsonBookMother) withProperty("title", title);
+	}
+
+	public JsonBookMother withAuthorName(String name) {
+		return (JsonBookMother) withProperty("author.name", name);
 	}
 }
