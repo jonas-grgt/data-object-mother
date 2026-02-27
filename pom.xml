@@ -24,6 +24,7 @@
         <jsonassert.version>1.5.3</jsonassert.version>
         <jackson.version>2.21.1</jackson.version>
         <opencsv.version>5.12.0</opencsv.version>
+        <jspecify.version>1.0.0</jspecify.version>
 
         <maven-spotless-plugin.version>2.41.1</maven-spotless-plugin.version>
     </properties>
@@ -41,6 +42,12 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jspecify</groupId>
+                <artifactId>jspecify</artifactId>
+                <version>${jspecify.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>

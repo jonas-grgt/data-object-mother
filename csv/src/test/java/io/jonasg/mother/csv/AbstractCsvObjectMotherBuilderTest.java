@@ -45,6 +45,29 @@ class AbstractCsvObjectMotherBuilderTest {
 	}
 
 	@Test
+	void withBuilderBasedRow() {
+		// given
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
+
+		// when
+		String actual = libraryBuilder
+				.withRow(builder -> builder
+						.withColumn("Ivan Turgenev")
+						.withColumn("Fathers and Sons")
+						.withColumn("Philosophical Novel"))
+				.build();
+
+		// then
+		assertThat(actual).isEqualTo("""
+				author,title,genre
+				Leo Tolstoy,War and Peace,Historical Novel
+				Fyodor Dostoevsky,Crime and Punishment,Psychological Novel
+				Alexander Pushkin,Eugene Onegin,Novel in Verse
+				Nikolai Gogol,Dead Souls,Satirical Novel
+				Ivan Turgenev,Fathers and Sons,Philosophical Novel""");
+	}
+
+	@Test
 	void withAdjustedColumnValueForRowByIndex() {
 		// given
 		var libraryBuilder = CsvMother.of("mother-data/books.csv");

@@ -1,14 +1,15 @@
 package io.jonasg.mother.json;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.jspecify.annotations.Nullable;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 public class JsonMother {
 
@@ -33,15 +34,20 @@ public class JsonMother {
 		}
 	}
 
-	public JsonMother withProperty(String field, Object value) {
+	public JsonMother withProperty(@Nullable String field, @Nullable Object value) {
+		if (field == null || field.isEmpty()) {
+			throw new IllegalArgumentException("Property path cannot be null or empty");
+		}
+
 		String[] parts = field.split("\\.");
 		JsonNode current = rootNode;
 
 		for (int i = 0; i < parts.length - 1; i++) {
 			String part = parts[i];
 			if (isArray(part)) {
-				String arrayName = part.substring(0, part.indexOf('['));
-				int index = Integer.parseInt(part.substring(part.indexOf('[') + 1, part.length() - 1));
+				int bracketIdx = part.indexOf('[');
+				String arrayName = part.substring(0, bracketIdx);
+				int index = Integer.parseInt(part.substring(bracketIdx + 1, part.length() - 1));
 
 				JsonNode arrayNode = current.path(arrayName);
 				if (arrayNode.isMissingNode() || !arrayNode.isArray()) {
@@ -69,12 +75,18 @@ public class JsonMother {
 		String key = parts[parts.length - 1];
 		if (current.isObject()) {
 			((ObjectNode) current).putPOJO(key, value);
+		} else {
+			throw new IllegalArgumentException("Cannot set property on non-object: " + field);
 		}
 
 		return this;
 	}
 
-	public JsonMother withRemovedProperty(String property) {
+	public JsonMother withRemovedProperty(@Nullable String property) {
+		if (property == null || property.isEmpty()) {
+			throw new IllegalArgumentException("Property path cannot be null or empty");
+		}
+
 		String[] parts = property.split("\\.");
 		JsonNode current = rootNode;
 
@@ -87,8 +99,9 @@ public class JsonMother {
 
 		if (current.isObject()) {
 			if (isArray(parts[parts.length - 1])) {
-				String arrayName = parts[parts.length - 1].substring(0, parts[parts.length - 1].indexOf('['));
-				int index = Integer.parseInt(parts[parts.length - 1].substring(parts[parts.length - 1].indexOf('[') + 1,
+				int bracketIdx = parts[parts.length - 1].indexOf('[');
+				String arrayName = parts[parts.length - 1].substring(0, bracketIdx);
+				int index = Integer.parseInt(parts[parts.length - 1].substring(bracketIdx + 1,
 						parts[parts.length - 1].length() - 1));
 				ArrayNode array = (ArrayNode) current.path(arrayName);
 				if (array.size() > index) {
@@ -103,7 +116,12 @@ public class JsonMother {
 	}
 
 	private boolean isArray(String part) {
-		return part.matches(".*\\[\\d+]$");
+		int idx = part.indexOf('[');
+		return idx > 0
+				&& part.length() >= 3
+				&& part.charAt(idx + 1) >= '0'
+				&& part.charAt(idx + 1) <= '9'
+				&& part.charAt(idx + 2) == ']';
 	}
 
 	public String build() {
@@ -113,7 +131,7 @@ public class JsonMother {
 	private Reader readerForFile(String filePath) {
 		var inputStream = this.getClass().getClassLoader().getResourceAsStream(filePath);
 		if (inputStream == null) {
-			throw new RuntimeException("Unable to open file " + filePath);
+			throw new IllegalArgumentException("Unable to open file: " + filePath);
 		}
 		return new InputStreamReader(inputStream);
 	}

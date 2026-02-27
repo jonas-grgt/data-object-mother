@@ -47,12 +47,10 @@ public class CsvMother {
 	}
 
 	public CsvMother withRowColumnValue(Predicate<Row> predicate, String column, Object value) {
-		for (Row row : rows) {
-			if (predicate.test(row)) {
-				setColumnValue(row, column, value);
-				break;
-			}
-		}
+		rows.stream()
+				.filter(predicate)
+				.findFirst()
+				.ifPresent(r -> setColumnValue(r, column, value));
 		return this;
 	}
 
@@ -68,17 +66,13 @@ public class CsvMother {
 	}
 
 	public String build() {
-		StringBuilder sb = new StringBuilder();
+		var sb = new StringBuilder();
 
 		sb.append(String.join(",", headers));
 
-		for (Row row : rows) {
-			sb.append("\n").append(String.join(",", row.getValues()));
-		}
+		rows.forEach(r -> sb.append("\n").append(String.join(",", r.getValues())));
 
-		for (int i = 0; i < pendingRows.size(); i++) {
-			sb.append("\n").append(String.join(",", pendingRows.get(i)));
-		}
+		pendingRows.forEach(r -> sb.append("\n").append(String.join(",", r)));
 
 		return sb.toString();
 	}
@@ -88,7 +82,7 @@ public class CsvMother {
 			if (is == null) {
 				throw new RuntimeException("Unable to open file " + filePath);
 			}
-			List<String[]> allLines = new CSVReader(new java.io.InputStreamReader(is, StandardCharsets.UTF_8))
+			var allLines = new CSVReader(new java.io.InputStreamReader(is, StandardCharsets.UTF_8))
 					.readAll();
 
 			if (!allLines.isEmpty()) {
