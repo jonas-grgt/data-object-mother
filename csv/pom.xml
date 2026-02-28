@@ -6,11 +6,13 @@
 	<parent>
 		<groupId>io.jonasg</groupId>
 		<artifactId>data-object-mother</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>0.0.0</version>
 	</parent>
 
 	<artifactId>csv-object-mother</artifactId>
 	<name>Data Object Mother :: CSV</name>
+	<description>CSV Data Object Mother</description>
+	<url>https://github.com/jonas-grgt/data-object-mother</url>
 
 	<dependencies>
 		<dependency>

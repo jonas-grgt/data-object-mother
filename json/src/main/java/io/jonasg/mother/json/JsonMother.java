@@ -56,7 +56,7 @@ public class JsonMother {
 
 	/**
 	 * Sets a property in the JSON structure.
-	 * </p>
+	 * <p>
 	 * The field parameter supports dot notation for nested properties and array
 	 * indexing. For example:
 	 * <ul>

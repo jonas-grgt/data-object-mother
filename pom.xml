@@ -6,14 +6,37 @@
 
     <groupId>io.jonasg</groupId>
     <artifactId>data-object-mother</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.0.0</version>
     <packaging>pom</packaging>
     <name>Data Object Mother :: Parent</name>
+    <description>Data Object Mother :: Parent</description>
+    <url>https://github.com/jonas-grgt/data-object-mother</url>
+
     <modules>
         <module>json</module>
         <module>csv</module>
         <module>xml</module>
     </modules>
+
+    <developers>
+        <developer>
+            <name>Jonas Geiregat</name>
+            <email>jonas.grgt@gmail.com</email>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/jonasg-grgt/data-object-mother</url>
+        <connection>scm:git:https://github.com/jonasg-grgt/data-object-mother</connection>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -28,7 +51,10 @@
         <opencsv.version>5.12.0</opencsv.version>
         <jspecify.version>1.0.0</jspecify.version>
 
+        <jreleaser.version>1.22.0</jreleaser.version>
+
         <maven-spotless-plugin.version>2.41.1</maven-spotless-plugin.version>
+        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -115,6 +141,97 @@
                 </configuration>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.jreleaser</groupId>
+                    <artifactId>jreleaser-maven-plugin</artifactId>
+                    <version>${jreleaser.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jreleaser</groupId>
+                        <artifactId>jreleaser-maven-plugin</artifactId>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <jreleaser>
+                                <project>
+                                    <description>Data Object Mother</description>
+                                    <links>
+                                        <homepage>https://github.com/jonas-grgt/data-object-mother</homepage>
+                                    </links>
+                                    <license>APACHE-2.0</license>
+                                    <authors>Jonas Geiregat</authors>
+                                    <copyright>2026 Jonas Geiregat</copyright>
+                                </project>
+                                <release>
+                                    <github>
+                                        <changelog>
+                                            <formatted>ALWAYS</formatted>
+                                            <preset>conventional-commits</preset>
+                                        </changelog>
+                                    </github>
+                                </release>
+                                <signing>
+                                    <active>ALWAYS</active>
+                                    <armored>true</armored>
+                                </signing>
+                                <deploy>
+                                    <maven>
+                                        <mavenCentral>
+                                            <sonatype>
+                                                <active>ALWAYS</active>
+                                                <url>https://central.sonatype.com/api/v1/publisher</url>
+                                                <stagingRepositories>target/staging-deploy</stagingRepositories>
+                                            </sonatype>
+                                        </mavenCentral>
+                                    </maven>
+                                </deploy>
+                            </jreleaser>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <attach>true</attach>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <attach>true</attach>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
