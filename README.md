@@ -9,6 +9,17 @@ components in your Java applications.
 
 ### Quick start 📝
 
+#### Installation
+
+```xml
+<dependency>
+    <groupId>io.jonasg</groupId>
+    <artifactId>json-object-mother</artifactId>
+    <version>${object-mother.version}</version>
+    <scope>test</scope>
+</dependency>
+```
+
 ```java
 // Load JSON from file and modify properties
 String json = JsonMother.of("book.json")
@@ -62,6 +73,17 @@ String json = BookMother.book()
 ---
 
 ## csv-object-mother 📊
+
+#### Installation
+
+```xml
+<dependency>
+    <groupId>io.jonasg</groupId>
+    <artifactId>csv-object-mother</artifactId>
+    <version>${object-mother.version}</version>
+    <scope>test</scope>
+</dependency>
+```
 
 The `CsvMother` class provides functionality for manipulating CSV data
 during testing. It allows loading CSV files, adding new rows, and modifying existing
@@ -166,6 +188,17 @@ String csv = BookLibraryMother.library()
 ---
 
 ## xml-object-mother 📝
+
+#### Installation
+
+```xml
+<dependency>
+    <groupId>io.jonasg</groupId>
+    <artifactId>xml-object-mother</artifactId>
+    <version>${object-mother.version}</version>
+    <scope>test</scope>
+</dependency>
+```
 
 The `XmlMother` class provides functionality for manipulating XML data
 during testing. It allows loading XML files, modifying elements and attributes,
