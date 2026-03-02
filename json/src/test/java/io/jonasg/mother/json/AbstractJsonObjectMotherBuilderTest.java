@@ -353,4 +353,73 @@ class AbstractJsonObjectMotherBuilderTest {
 				}
 				""", actual, true);
 	}
+
+	@Test
+	void addNewObjectToMultiDigitArrayIndex() throws JSONException {
+		var bookBuilder = JsonMother.of("mother-data/book.json");
+
+		String actual = bookBuilder
+				.withProperty("genres[10].type", "thriller")
+				.build();
+
+		assertEquals("""
+				{
+				  "id": 1,
+				  "title": "The Great Gatsby",
+				  "author": {
+				    "name": "F. Scott Fitzgerald"
+				  },
+				  "published": {
+				    "year": 1925
+				  },
+				  "genres": [
+				    {
+				      "type": "novel"
+				    },
+				    {
+				      "type": "fiction"
+				    },
+				    null,
+				    null,
+				    null,
+				    null,
+				    null,
+				    null,
+				    null,
+				    null,
+				    {
+				      "type": "thriller"
+				    }
+				  ]
+				}
+				""", actual, true);
+	}
+
+	@Test
+	void removeNestedPropertyInArrayElement() throws JSONException {
+		var bookBuilder = JsonMother.of("mother-data/book.json");
+
+		String actual = bookBuilder
+				.withRemovedProperty("genres[0].type")
+				.build();
+
+		assertEquals("""
+				{
+				  "id": 1,
+				  "title": "The Great Gatsby",
+				  "author": {
+				    "name": "F. Scott Fitzgerald"
+				  },
+				  "published": {
+				    "year": 1925
+				  },
+				  "genres": [
+				    {},
+				    {
+				      "type": "fiction"
+				    }
+				  ]
+				}
+				""", actual, true);
+	}
 }

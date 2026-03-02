@@ -3,40 +3,23 @@ package io.jonasg.mother.json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-/**
- * A utility class for building JSON objects - as string - based on an existing
- * file.
- * It allows for modifying properties of the JSON structure using dot notation
- * for nested properties and array indexing.
- */
 public class JsonMother {
 
 	private final static ObjectMapper objectMapper = new ObjectMapper();
 
+	private static final Pattern BRACKET_PATTERN = Pattern.compile("(\\w+)\\[(\\d+)\\]");
+
 	private final ObjectNode rootNode;
 
-	/**
-	 * Creates a new JsonMother instance by loading a JSON file from the classpath.
-	 * 
-	 * @param filePath
-	 *            the path to the JSON file in the classpath (e.g.,
-	 *            "data/sample.json")
-	 * @return a new JsonMother instance initialized with the content of the
-	 *         specified JSON file
-	 * @throws IllegalArgumentException
-	 *             if the file cannot be found, or if the content is not a JSON
-	 *             object
-	 * @throws RuntimeException
-	 *             if there is an error processing the JSON content
-	 */
 	public static JsonMother of(String filePath) {
 		return new JsonMother(filePath);
 	}
@@ -54,38 +37,19 @@ public class JsonMother {
 		}
 	}
 
-	/**
-	 * Sets a property in the JSON structure.
-	 * <p>
-	 * The field parameter supports dot notation for nested properties and array
-	 * indexing. For example:
-	 * <ul>
-	 * <li>"author.name" sets the "name" property of the "author" object.</li>
-	 * <li>"genres[0].type" sets the "type" property of the first element in the
-	 * "genres" array.</li>
-	 * </ul>
-	 * 
-	 * @param field
-	 *            the property path in dot notation, supporting nested properties
-	 *            and array indexing
-	 * @param value
-	 *            the value to set for the specified property
-	 * @return the current JsonMother instance for method chaining
-	 */
 	public JsonMother withProperty(String field, @Nullable Object value) {
-		if (field.isEmpty()) {
+		if (field == null || field.isEmpty()) {
 			throw new IllegalArgumentException("Property path cannot be null or empty");
 		}
 
-		String[] parts = field.split("\\.");
+		String[] parts = splitPath(field);
 		JsonNode current = rootNode;
 
 		for (int i = 0; i < parts.length - 1; i++) {
 			String part = parts[i];
-			if (isArray(part)) {
-				int bracketIdx = part.indexOf('[');
-				String arrayName = part.substring(0, bracketIdx);
-				int index = Integer.parseInt(part.substring(bracketIdx + 1, part.length() - 1));
+			if (isArrayIndex(part)) {
+				String arrayName = arrayName(part);
+				int index = arrayIndex(part);
 
 				JsonNode arrayNode = current.path(arrayName);
 				if (arrayNode.isMissingNode() || !arrayNode.isArray()) {
@@ -98,7 +62,7 @@ public class JsonMother {
 				}
 
 				if (array.get(index).isNull() || !array.get(index).isObject()) {
-					array.set(index, new ObjectNode(JsonNodeFactory.instance));
+					array.set(index, objectMapper.createObjectNode());
 				}
 				current = array.get(index);
 			} else {
@@ -111,7 +75,21 @@ public class JsonMother {
 		}
 
 		String key = parts[parts.length - 1];
-		if (current.isObject()) {
+		if (isArrayIndex(key)) {
+			String arrayName = arrayName(key);
+			int index = arrayIndex(key);
+
+			JsonNode arrayNode = current.path(arrayName);
+			if (arrayNode.isMissingNode() || !arrayNode.isArray()) {
+				arrayNode = ((ObjectNode) current).putArray(arrayName);
+			}
+
+			ArrayNode array = (ArrayNode) arrayNode;
+			while (array.size() <= index) {
+				array.addNull();
+			}
+			array.set(index, objectMapper.valueToTree(value));
+		} else if (current.isObject()) {
 			((ObjectNode) current).putPOJO(key, value);
 		} else {
 			throw new IllegalArgumentException("Cannot set property on non-object: " + field);
@@ -120,65 +98,86 @@ public class JsonMother {
 		return this;
 	}
 
-	/**
-	 * Completely removes a property from the JSON structure.
-	 * 
-	 * @param property
-	 *            the property path in dot notation, supporting nested properties
-	 *            and array indexing (e.g., "author.name" or "genres[0].type")
-	 * @return the current JsonMother instance for method chaining
-	 */
 	public JsonMother withRemovedProperty(String property) {
-		if (property.isEmpty()) {
+		if (property == null || property.isEmpty()) {
 			throw new IllegalArgumentException("Property path cannot be null or empty");
 		}
 
-		String[] parts = property.split("\\.");
-		JsonNode current = rootNode;
+		String pointer = toJsonPointer(property);
+		String parentPath = parentPath(pointer);
+		String key = leafKey(pointer);
 
-		for (int i = 0; i < parts.length - 1; i++) {
-			current = current.path(parts[i]);
-			if (current.isMissingNode() || !current.isObject()) {
-				throw new IllegalArgumentException("Invalid path in JSON: " + property);
-			}
+		JsonNode parent = parentPath.isEmpty() ? rootNode : rootNode.at(parentPath);
+		if (parent.isMissingNode()) {
+			throw new IllegalArgumentException("Invalid path in JSON: " + property);
 		}
 
-		if (current.isObject()) {
-			if (isArray(parts[parts.length - 1])) {
-				int bracketIdx = parts[parts.length - 1].indexOf('[');
-				String arrayName = parts[parts.length - 1].substring(0, bracketIdx);
-				int index = Integer.parseInt(parts[parts.length - 1].substring(bracketIdx + 1,
-						parts[parts.length - 1].length() - 1));
-				ArrayNode array = (ArrayNode) current.path(arrayName);
-				if (array.size() > index) {
-					array.remove(index);
-				}
-			} else {
-				((ObjectNode) current).remove(parts[parts.length - 1]);
+		if (parent.isArray()) {
+			int index = Integer.parseInt(key);
+			ArrayNode array = (ArrayNode) parent;
+			if (array.size() > index) {
+				array.remove(index);
 			}
+		} else if (parent.isObject()) {
+			((ObjectNode) parent).remove(key);
 		}
 
 		return this;
 	}
 
-	/**
-	 * Builds the final JSON string based on the current state of the JSON
-	 * structure.
-	 * 
-	 * @return the JSON string representation of the current state of the
-	 *         (customized) JSON structure
-	 */
 	public String build() {
 		return rootNode.toString();
 	}
 
-	private boolean isArray(String part) {
-		int idx = part.indexOf('[');
-		return idx > 0
-				&& part.length() >= 3
-				&& part.charAt(idx + 1) >= '0'
-				&& part.charAt(idx + 1) <= '9'
-				&& part.charAt(idx + 2) == ']';
+	private String toJsonPointer(String path) {
+		String result = path;
+		Matcher matcher = BRACKET_PATTERN.matcher(result);
+		var sb = new StringBuilder();
+		while (matcher.find()) {
+			matcher.appendReplacement(sb, "/" + matcher.group(1) + "/" + matcher.group(2));
+		}
+		matcher.appendTail(sb);
+		result = sb.toString();
+		if (!result.startsWith("/")) {
+			result = "/" + result;
+		}
+		result = result.replace('.', '/');
+		return result;
+	}
+
+	private String parentPath(String pointer) {
+		int lastSlash = pointer.lastIndexOf('/');
+		if (lastSlash <= 0) {
+			return "";
+		}
+		return pointer.substring(0, lastSlash);
+	}
+
+	private String[] splitPath(String path) {
+		StringBuffer sb = new StringBuffer();
+		Matcher matcher = BRACKET_PATTERN.matcher(path);
+		while (matcher.find()) {
+			matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group(1) + "___" + matcher.group(2)));
+		}
+		matcher.appendTail(sb);
+		return sb.toString().replace('.', '/').split("/");
+	}
+
+	private boolean isArrayIndex(String part) {
+		return part.contains("___");
+	}
+
+	private String arrayName(String part) {
+		return part.substring(0, part.indexOf("___"));
+	}
+
+	private int arrayIndex(String part) {
+		return Integer.parseInt(part.substring(part.indexOf("___") + 3));
+	}
+
+	private String leafKey(String pointer) {
+		int lastSlash = pointer.lastIndexOf('/');
+		return pointer.substring(lastSlash + 1);
 	}
 
 	private Reader readerForFile(String filePath) {
