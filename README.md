@@ -33,8 +33,12 @@ String json = JsonMother.of("book.json")
 #### Available methods 🔧
 
 - `withProperty(String path, Object value)` - Set a property using dot notation
-  - Nested properties: `"author.name"`
-  - Array elements: `"tags[0]"`, `"items[2].id"`
+  - `path`:
+    - Nested properties: `"author.name"`
+    - Array elements: `"tags[0]"`, `"items[2].id"`
+  - `value`:
+    - Primitive types: `String`, `Number`, `Boolean`
+    - Complex types: `Map`, `List`, custom objects (converted to JSON)
 - `withRemovedProperty(String path)` - Remove a property
 - `build()` - Returns the modified JSON as a string
 

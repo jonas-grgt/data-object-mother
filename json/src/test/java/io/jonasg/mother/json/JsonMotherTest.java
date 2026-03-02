@@ -1,13 +1,13 @@
 package io.jonasg.mother.json;
 
-import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
-
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 
-import io.jonasg.mother.json.JsonMother;
+import java.util.Map;
 
-class AbstractJsonObjectMotherBuilderTest {
+import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
+
+class JsonMotherTest {
 
 	@Test
 	void overrideExistingProperty() throws JSONException {
@@ -421,5 +421,90 @@ class AbstractJsonObjectMotherBuilderTest {
 				  ]
 				}
 				""", actual, true);
+	}
+
+	@Test
+	void addMapObject() throws JSONException {
+		// given
+		var bookBuilder = JsonMother.of("mother-data/book.json");
+
+		// when
+		String actual = bookBuilder
+				.withProperty("prop", Map.of("key1", "value1", "key2", 2))
+				.build();
+
+		assertEquals("""
+				{
+				  "id" : 1,
+				  "title" : "The Great Gatsby",
+				  "author" : {
+				    "name" : "F. Scott Fitzgerald"
+				  },
+				  "published" : {
+				    "year" : 1925
+				  },
+				  "genres" : [ {
+				    "type" : "novel"
+				  }, {
+				    "type" : "fiction"
+				  } ],
+				  "prop" : {
+				    "key1" : "value1",
+				    "key2" : 2
+				  }
+				}
+				""", actual, true);
+	}
+
+	@Test
+	void addMapJavaObject() throws JSONException {
+		// given
+		var bookBuilder = JsonMother.of("mother-data/book.json");
+
+		// when
+		String actual = bookBuilder
+				.withProperty("prop", new TestData("value1", 2))
+				.build();
+
+		assertEquals("""
+				{
+				  "id" : 1,
+				  "title" : "The Great Gatsby",
+				  "author" : {
+				    "name" : "F. Scott Fitzgerald"
+				  },
+				  "published" : {
+				    "year" : 1925
+				  },
+				  "genres" : [ {
+				    "type" : "novel"
+				  }, {
+				    "type" : "fiction"
+				  } ],
+				  "prop" : {
+				    "name" : "value1",
+				    "value" : 2
+				  }
+				}
+				""", actual, true);
+	}
+
+	@SuppressWarnings("unused")
+	public static class TestData {
+		private String name;
+		private int value;
+
+		public TestData(String name, int value) {
+			this.name = name;
+			this.value = value;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public int getValue() {
+			return value;
+		}
 	}
 }
