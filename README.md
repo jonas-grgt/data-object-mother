@@ -21,25 +21,28 @@ components in your Java applications.
 ```
 
 ```java
-// Load JSON from file and modify properties
+// Load JSON from file and modify properties using JSON Pointer (RFC 6901)
 String json = JsonMother.of("book.json")
-    .withProperty("title", "New Title")
-    .withProperty("author.name", "Jane Doe")
-    .withProperty("tags[0]", "fiction")
-    .withRemovedProperty("deprecatedField")
+    .withProperty("/title", "New Title")
+    .withProperty("/author/name", "Jane Doe")
+    .withProperty("/tags/0", "fiction")
+    .withRemovedProperty("/deprecatedField")
     .build();
 ```
 
 #### Available methods 🔧
 
-- `withProperty(String path, Object value)` - Set a property using dot notation
-  - `path`:
-    - Nested properties: `"author.name"`
-    - Array elements: `"tags[0]"`, `"items[2].id"`
+- `withProperty(String jsonPointer, Object value)` - Set a property using
+  <a href="https://tools.ietf.org/html/rfc6901">RFC 6901 JSON Pointer</a> notation
+  - `jsonPointer`:
+    - Root: `"/"`
+    - Root value: `"/"` (when used with a primitive value)
+    - Nested properties: `"/author/name"`
+    - Array elements: `"/tags/0"`, `"/items/2/id"`
   - `value`:
     - Primitive types: `String`, `Number`, `Boolean`
     - Complex types: `Map`, `List`, custom objects (converted to JSON)
-- `withRemovedProperty(String path)` - Remove a property
+- `withRemovedProperty(String jsonPointer)` - Remove a property using JSON Pointer
 - `build()` - Returns the modified JSON as a string
 
 #### Extending for custom DSL 📦
@@ -59,18 +62,18 @@ public class BookMother extends JsonMother {
 
     // Custom DSL methods
     public BookMother withTitle(String title) {
-        return (BookMother) withProperty("title", title);
+        return (BookMother) withProperty("/title", title);
     }
 
     public BookMother withAuthorName(String name) {
-        return (BookMother) withProperty("author.name", name);
+        return (BookMother) withProperty("/author/name", name);
     }
 }
 
 // Usage
 String json = BookMother.book()
     .withTitle("New Title")           // Custom DSL
-    .withProperty("tags", "fiction")  // Still available
+    .withProperty("/tags/0", "fiction")  // Still available
     .build();
 ```
 

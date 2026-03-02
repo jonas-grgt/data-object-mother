@@ -11,15 +11,12 @@ class JsonMotherTest {
 
 	@Test
 	void overrideExistingProperty() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withProperty("id", 123)
+				.withProperty("/id", 123)
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				  "id": 123,
@@ -44,15 +41,12 @@ class JsonMotherTest {
 
 	@Test
 	void overrideExistingNestedProperty() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withProperty("author.name", "Ernest Hemingway")
+				.withProperty("/author/name", "Ernest Hemingway")
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				  "id": 1,
@@ -77,15 +71,12 @@ class JsonMotherTest {
 
 	@Test
 	void removeExistingProperty() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withRemovedProperty("title")
+				.withRemovedProperty("/title")
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				  "id": 1,
@@ -109,15 +100,12 @@ class JsonMotherTest {
 
 	@Test
 	void removeExistingNestedProperty() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withRemovedProperty("author.name")
+				.withRemovedProperty("/author/name")
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				  "id": 1,
@@ -140,15 +128,12 @@ class JsonMotherTest {
 
 	@Test
 	void removeElementFromArray() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withRemovedProperty("genres[1]")
+				.withRemovedProperty("/genres/1")
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				  "id": 1,
@@ -170,15 +155,12 @@ class JsonMotherTest {
 
 	@Test
 	void addNewProperty() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withProperty("language", "English")
+				.withProperty("/language", "English")
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				  "id": 1,
@@ -204,15 +186,12 @@ class JsonMotherTest {
 
 	@Test
 	void addNewNestedProperty() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withProperty("translations.english", true)
+				.withProperty("/translations/english", true)
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				  "id": 1,
@@ -240,16 +219,13 @@ class JsonMotherTest {
 
 	@Test
 	void addMultipleNewNestedPropertiesAtTheSameLevel() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withProperty("translations.english", true)
-				.withProperty("translations.french", false)
+				.withProperty("/translations/english", true)
+				.withProperty("/translations/french", false)
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				  "id": 1,
@@ -278,15 +254,12 @@ class JsonMotherTest {
 
 	@Test
 	void addNewObjectToArrayElement() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withProperty("genres[2].type", "drama")
+				.withProperty("/genres/2/type", "drama")
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				  "id": 1,
@@ -314,16 +287,13 @@ class JsonMotherTest {
 
 	@Test
 	void addNewObjectToNewArrayElement() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withProperty("translations[0].language", "French")
-				.withProperty("translations[1].language", "Spanish")
+				.withProperty("/translations/0/language", "French")
+				.withProperty("/translations/1/language", "Spanish")
 				.build();
 
-		// then
 		assertEquals("""
 				{
 				       "id": 1,
@@ -359,7 +329,7 @@ class JsonMotherTest {
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
 		String actual = bookBuilder
-				.withProperty("genres[10].type", "thriller")
+				.withProperty("/genres/10/type", "thriller")
 				.build();
 
 		assertEquals("""
@@ -400,7 +370,7 @@ class JsonMotherTest {
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
 		String actual = bookBuilder
-				.withRemovedProperty("genres[0].type")
+				.withRemovedProperty("/genres/0/type")
 				.build();
 
 		assertEquals("""
@@ -425,12 +395,10 @@ class JsonMotherTest {
 
 	@Test
 	void addMapObject() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withProperty("prop", Map.of("key1", "value1", "key2", 2))
+				.withProperty("/prop", Map.of("key1", "value1", "key2", 2))
 				.build();
 
 		assertEquals("""
@@ -458,12 +426,10 @@ class JsonMotherTest {
 
 	@Test
 	void addMapJavaObject() throws JSONException {
-		// given
 		var bookBuilder = JsonMother.of("mother-data/book.json");
 
-		// when
 		String actual = bookBuilder
-				.withProperty("prop", new TestData("value1", 2))
+				.withProperty("/prop", new TestData("value1", 2))
 				.build();
 
 		assertEquals("""

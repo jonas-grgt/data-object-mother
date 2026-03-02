@@ -1,22 +1,34 @@
 package io.jonasg.mother.json;
 
+import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A utility class for building JSON objects - as string - based on an existing
- * file.
- * It allows for modifying properties of the JSON structure using dot notation
- * for nested properties and array indexing.
+ * JSON file.
+ * <p>
+ * It allows for modifying properties of the JSON structure using
+ * <a href="https://tools.ietf.org/html/rfc6901">RFC 6901 JSON Pointer</a>
+ * notation for nested properties and array indexing.
+ * </p>
+ * <p>
+ * Example usage:
+ * </p>
+ * 
+ * <pre>
+ * var builder = JsonMother.of("data/book.json");
+ * String json = builder
+ * 		.withProperty("/author/name", "Ernest Hemingway")
+ * 		.withProperty("/genres/0/type", "fiction")
+ * 		.withRemovedProperty("/published/year")
+ * 		.build();
+ * </pre>
  */
 public class JsonMother {
 
@@ -56,67 +68,146 @@ public class JsonMother {
 	}
 
 	/**
-	 * Modifies the JSON structure by setting a property at the specified path to
-	 * the given value.
+	 * Modifies the JSON structure by setting a property at the specified JSON
+	 * Pointer path to the given value.
 	 *
-	 * @param path
-	 *            the path to the property to set, using dot notation for nested
-	 *            properties and array indexing (e.g., "author.name" or
-	 *            "genres[0].type")
+	 * @param jsonPointer
+	 *            the path to the property to set, using
+	 *            <a href="https://tools.ietf.org/html/rfc6901">RFC 6901 JSON
+	 *            Pointer</a>
+	 *            notation (e.g., "/author/name" or "/genres/0/type")
 	 * @param value
 	 *            the value to set at the specified path; can be a primitive type,
 	 *            a String, or any object that can be converted to JSON using
 	 *            Jackson's ObjectMapper
 	 * @return the current JsonMother instance for method chaining
 	 */
-	public JsonMother withProperty(String path, Object value) {
-		List<PathSegment> segments = parsePath(path);
-		JsonNode current = root;
+	public JsonMother withProperty(String jsonPointer, Object value) {
+		JsonPointer pointer = JsonPointer.compile(jsonPointer);
 
-		for (int i = 0; i < segments.size() - 1; i++) {
-			PathSegment segment = segments.get(i);
-			boolean nextIsArrayIndex = isNextSegmentArrayIndex(segments, i);
-			current = navigateOrCreate(current, segment, nextIsArrayIndex);
+		if (pointer.matches()) {
+			setRootValue(value);
+			return this;
 		}
 
-		PathSegment lastSegment = segments.get(segments.size() - 1);
-		setValue(current, lastSegment, value);
+		JsonPointer parentPointer = pointer.head();
+		JsonNode parentNode = getOrCreateParentNode(parentPointer, pointer);
+
+		String lastSegment = pointer.last().toString().replace("/", "");
+
+		if (parentNode instanceof ObjectNode objectNode) {
+			objectNode.putPOJO(lastSegment, value);
+		} else if (parentNode instanceof ArrayNode arrayNode) {
+			try {
+				int index = Integer.parseInt(lastSegment);
+				while (arrayNode.size() <= index) {
+					arrayNode.addNull();
+				}
+				arrayNode.set(index, convertValue(value));
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Invalid array index: " + lastSegment);
+			}
+		}
 
 		return this;
 	}
 
-	/**
-	 * Removes a property from the JSON structure at the specified path.
-	 *
-	 * @param path
-	 *            the path to the property to remove, using dot notation for nested
-	 *            properties and array indexing (e.g., "author.name" or
-	 *            "genres[0].type")
-	 * @return the current JsonMother instance for method chaining
-	 */
-	public JsonMother withRemovedProperty(String path) {
-		List<PathSegment> segments = parsePath(path);
-		JsonNode current = root;
+	private JsonNode getOrCreateParentNode(JsonPointer pointer, JsonPointer originalPointer) {
+		if (pointer.matches()) {
+			return root;
+		}
 
-		for (int i = 0; i < segments.size() - 1; i++) {
-			PathSegment segment = segments.get(i);
-			current = navigate(current, segment);
-			if (current == null) {
-				return this;
+		JsonNode node = root.at(pointer);
+		if (node != null && !node.isNull() && !node.isMissingNode()) {
+			return node;
+		}
+
+		JsonPointer parentPointer = pointer.head();
+		JsonNode parentNode = getOrCreateParentNode(parentPointer, originalPointer);
+
+		String segment = pointer.last().toString().replace("/", "");
+
+		boolean isArrayIndex = isNumeric(segment);
+		if (!isArrayIndex && !pointer.matches()) {
+			String fullPath = originalPointer.toString();
+			String[] parts = fullPath.split("/");
+			int currentDepth = countParts(pointer.toString());
+			if (currentDepth < parts.length - 1) {
+				String nextSegment = parts[currentDepth + 1];
+				isArrayIndex = isNumeric(nextSegment);
 			}
 		}
 
-		PathSegment lastSegment = segments.get(segments.size() - 1);
-		if (current instanceof ObjectNode objectNode) {
-			if (lastSegment.propertyName != null) {
-				objectNode.remove(lastSegment.propertyName);
-			}
-		} else if (current instanceof ArrayNode arrayNode) {
-			if (lastSegment.arrayIndex != null) {
-				int idx = lastSegment.arrayIndex;
-				if (idx >= 0 && idx < arrayNode.size()) {
-					arrayNode.remove(idx);
+		JsonNode newNode;
+		if (parentNode.isArray()) {
+			newNode = objectMapper.createObjectNode();
+		} else {
+			newNode = isArrayIndex ? objectMapper.createArrayNode() : objectMapper.createObjectNode();
+		}
+
+		if (parentNode instanceof ObjectNode objectNode) {
+			objectNode.set(segment, newNode);
+		} else if (parentNode instanceof ArrayNode arrayNode) {
+			try {
+				int index = Integer.parseInt(segment);
+				while (arrayNode.size() <= index) {
+					arrayNode.addNull();
 				}
+				arrayNode.set(index, newNode);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Invalid array index: " + segment);
+			}
+		}
+
+		return newNode;
+	}
+
+	private int countParts(String path) {
+		if (path.isEmpty() || path.equals("/")) {
+			return 0;
+		}
+		return path.split("/").length - 1;
+	}
+
+	/**
+	 * Removes a property from the JSON structure at the specified JSON Pointer
+	 * path.
+	 *
+	 * @param jsonPointer
+	 *            the path to the property to remove, using
+	 *            <a href="https://tools.ietf.org/html/rfc6901">RFC 6901 JSON
+	 *            Pointer</a>
+	 *            notation (e.g., "/author/name" or "/genres/0/type")
+	 * @return the current JsonMother instance for method chaining
+	 */
+	public JsonMother withRemovedProperty(String jsonPointer) {
+		JsonPointer pointer = JsonPointer.compile(jsonPointer);
+
+		JsonPointer parentPointer = pointer.head();
+		JsonNode parentNode;
+
+		if (parentPointer.matches()) {
+			parentNode = root;
+		} else {
+			parentNode = root.at(parentPointer);
+		}
+
+		if (parentNode == null) {
+			return this;
+		}
+
+		String lastSegment = pointer.last().toString().replace("/", "");
+
+		if (parentNode instanceof ObjectNode objectNode) {
+			objectNode.remove(lastSegment);
+		} else if (parentNode instanceof ArrayNode arrayNode) {
+			try {
+				int index = Integer.parseInt(lastSegment);
+				if (index >= 0 && index < arrayNode.size()) {
+					arrayNode.remove(index);
+				}
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Invalid array index: " + lastSegment);
 			}
 		}
 
@@ -137,161 +228,35 @@ public class JsonMother {
 		}
 	}
 
-	private List<PathSegment> parsePath(String path) {
-		List<PathSegment> segments = new ArrayList<>();
-		StringBuilder currentToken = new StringBuilder();
-
-		for (int i = 0; i < path.length(); i++) {
-			char c = path.charAt(i);
-
-			if (c == '.') {
-				if (!currentToken.isEmpty()) {
-					segments.add(new PathSegment(currentToken.toString(), null));
-					currentToken.setLength(0);
-				}
-			} else if (c == '[') {
-				if (!currentToken.isEmpty()) {
-					segments.add(new PathSegment(currentToken.toString(), null));
-					currentToken.setLength(0);
-				}
-				int closeBracket = path.indexOf(']', i);
-				if (closeBracket == -1) {
-					throw new IllegalArgumentException("Unclosed bracket in path: " + path);
-				}
-				String indexStr = path.substring(i + 1, closeBracket);
-				int index = Integer.parseInt(indexStr);
-				segments.add(new PathSegment(null, index));
-				i = closeBracket;
-			} else {
-				currentToken.append(c);
+	private void setRootValue(Object value) {
+		if (value instanceof JsonNode jsonNode) {
+			if (jsonNode.isObject()) {
+				root.removeAll();
+				root.setAll((ObjectNode) jsonNode);
 			}
+		} else {
+			root.putPOJO("_value", value);
 		}
-
-		if (!currentToken.isEmpty()) {
-			segments.add(new PathSegment(currentToken.toString(), null));
-		}
-
-		return segments;
 	}
 
-	private JsonNode navigateOrCreate(JsonNode node, PathSegment segment, boolean nextIsArrayIndex) {
-		if (segment.propertyName != null) {
-			if (node.has(segment.propertyName)) {
-				return node.get(segment.propertyName);
-			} else {
-				JsonNode newNode;
-				if (nextIsArrayIndex) {
-					newNode = objectMapper.createArrayNode();
-				} else {
-					newNode = objectMapper.createObjectNode();
-				}
-				((ObjectNode) node).set(segment.propertyName, newNode);
-				return newNode;
-			}
-		} else if (segment.arrayIndex != null) {
-			ArrayNode arrayNode;
-			if (node.isArray()) {
-				arrayNode = (ArrayNode) node;
-			} else if (node.isObject()) {
-				ObjectNode objectNode = (ObjectNode) node;
-				String arrayKey = "_arr_" + segment.arrayIndex;
-				JsonNode existing = objectNode.get(arrayKey);
-				if (existing != null && existing.isArray()) {
-					arrayNode = (ArrayNode) existing;
-				} else {
-					arrayNode = objectMapper.createArrayNode();
-					objectNode.set(arrayKey, arrayNode);
-				}
-			} else {
-				return null;
-			}
-
-			while (arrayNode.size() <= segment.arrayIndex) {
-				arrayNode.addNull();
-			}
-
-			JsonNode element = arrayNode.get(segment.arrayIndex);
-			if (element == null || element.isNull()) {
-				ObjectNode newNode = objectMapper.createObjectNode();
-				arrayNode.set(segment.arrayIndex, newNode);
-				return newNode;
-			}
-			return element;
-		}
-		throw new IllegalArgumentException("Invalid segment");
-	}
-
-	private boolean isNextSegmentArrayIndex(List<PathSegment> segments, int currentIndex) {
-		if (currentIndex + 1 >= segments.size()) {
+	private boolean isNumeric(String str) {
+		if (str == null || str.isEmpty()) {
 			return false;
 		}
-		return segments.get(currentIndex + 1).arrayIndex != null;
-	}
-
-	private JsonNode navigate(JsonNode node, PathSegment segment) {
-		if (segment.propertyName != null) {
-			return node.get(segment.propertyName);
-		} else if (segment.arrayIndex != null) {
-			if (node.isArray()) {
-				ArrayNode arrayNode = (ArrayNode) node;
-				int idx = segment.arrayIndex;
-				if (idx >= 0 && idx < arrayNode.size()) {
-					return arrayNode.get(idx);
-				}
+		for (char c : str.toCharArray()) {
+			if (!Character.isDigit(c)) {
+				return false;
 			}
-			return null;
 		}
-		return null;
-	}
-
-	private void setValue(JsonNode node, PathSegment segment, Object value) {
-		if (segment.propertyName != null) {
-			((ObjectNode) node).putPOJO(segment.propertyName, value);
-		} else if (segment.arrayIndex != null) {
-			ArrayNode arrayNode;
-			if (node.isArray()) {
-				arrayNode = (ArrayNode) node;
-			} else if (node.isObject()) {
-				ObjectNode objectNode = (ObjectNode) node;
-				String arrayKey = "_arr_" + segment.arrayIndex;
-				JsonNode existing = objectNode.get(arrayKey);
-				if (existing != null && existing.isArray()) {
-					arrayNode = (ArrayNode) existing;
-				} else {
-					arrayNode = objectMapper.createArrayNode();
-					objectNode.set(arrayKey, arrayNode);
-				}
-			} else {
-				return;
-			}
-
-			while (arrayNode.size() <= segment.arrayIndex) {
-				arrayNode.addNull();
-			}
-			arrayNode.set(segment.arrayIndex(), convertValue(value));
-		}
+		return true;
 	}
 
 	private JsonNode convertValue(Object value) {
-		JsonNodeFactory factory = JsonNodeFactory.instance;
 		if (value == null) {
-			return factory.nullNode();
-		} else if (value instanceof JsonNode) {
-			return (JsonNode) value;
-		} else if (value instanceof Number) {
-			if (value instanceof Integer || value instanceof Long) {
-				return factory.numberNode(((Number) value).longValue());
-			} else if (value instanceof Double || value instanceof Float) {
-				return factory.numberNode(((Number) value).doubleValue());
-			}
-		} else if (value instanceof Boolean) {
-			return factory.booleanNode((Boolean) value);
-		} else if (value instanceof String) {
-			return factory.textNode((String) value);
+			return objectMapper.nullNode();
+		} else if (value instanceof JsonNode jsonNode) {
+			return jsonNode;
 		}
 		return objectMapper.valueToTree(value);
-	}
-
-	private record PathSegment(String propertyName, Integer arrayIndex) {
 	}
 }
