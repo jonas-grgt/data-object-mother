@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 
@@ -82,7 +83,7 @@ public class JsonMother {
 	 *            Jackson's ObjectMapper
 	 * @return the current JsonMother instance for method chaining
 	 */
-	public JsonMother withProperty(String jsonPointer, Object value) {
+	public JsonMother withProperty(String jsonPointer, @Nullable Object value) {
 		JsonPointer pointer = JsonPointer.compile(jsonPointer);
 
 		if (pointer.matches()) {
@@ -228,7 +229,7 @@ public class JsonMother {
 		}
 	}
 
-	private void setRootValue(Object value) {
+	private void setRootValue(@Nullable Object value) {
 		if (value instanceof JsonNode jsonNode) {
 			if (jsonNode.isObject()) {
 				root.removeAll();
