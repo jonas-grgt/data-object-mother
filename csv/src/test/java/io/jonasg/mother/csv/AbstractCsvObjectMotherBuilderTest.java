@@ -146,4 +146,62 @@ class AbstractCsvObjectMotherBuilderTest {
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("No row found matching the given predicate");
 	}
+
+	@Test
+	void withRowRemovedByIndex() {
+		// given
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
+
+		String actual = libraryBuilder
+				.withoutRow(0)
+				.build();
+
+		// then
+		assertThat(actual).isEqualTo("""
+				author,title,genre
+				Fyodor Dostoevsky,Crime and Punishment,Psychological Novel
+				Alexander Pushkin,Eugene Onegin,Novel in Verse
+				Nikolai Gogol,Dead Souls,Satirical Novel""");
+	}
+
+	@Test
+	void withRowRemovedByIndexThrowsWhenRowIndexOutOfBounds() {
+		// given
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
+
+		// then
+		assertThatThrownBy(() -> libraryBuilder
+				.withoutRow(100))
+				.isInstanceOf(IndexOutOfBoundsException.class)
+				.hasMessageContaining("is out of bounds");
+	}
+
+	@Test
+	void withRowRemovedByPredicate() {
+		// given
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
+
+		String actual = libraryBuilder
+				.withoutRow(r -> "Leo Tolstoy".equals(r.column("author")))
+				.build();
+
+		// then
+		assertThat(actual).isEqualTo("""
+				author,title,genre
+				Fyodor Dostoevsky,Crime and Punishment,Psychological Novel
+				Alexander Pushkin,Eugene Onegin,Novel in Verse
+				Nikolai Gogol,Dead Souls,Satirical Novel""");
+	}
+
+	@Test
+	void withRowRemovedByPredicateThrowsWhenNoMatch() {
+		// given
+		var libraryBuilder = CsvMother.of("mother-data/books.csv");
+
+		// when & then
+		assertThatThrownBy(() -> libraryBuilder
+				.withoutRow(r -> "NonExistent".equals(r.column("author"))))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("No row found matching the given predicate");
+	}
 }
