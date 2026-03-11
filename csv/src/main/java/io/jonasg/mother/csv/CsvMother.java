@@ -72,6 +72,45 @@ public class CsvMother {
 	}
 
 	/**
+	 * Removes the row for the given index from the CSV content.
+	 *
+	 * @param index
+	 *            the index of the row you want to remove
+	 * @return the current CsvMother instance for method chaining
+	 */
+	public CsvMother withoutRow(int index) {
+		if (index < 0 || index >= rows.size()) {
+			throw new IndexOutOfBoundsException(
+					"Row index " + index + " is out of bounds. Valid range: 0-" + (rows.size() - 1));
+		}
+
+		rows.remove(index);
+		return this;
+	}
+
+	/**
+	 * Removes the row for the given index from the CSV content.
+	 *
+	 * @param predicate
+	 *            a Predicate that tests each row to find a match
+	 * @return the current CsvMother instance for method chaining
+	 * @throws IllegalArgumentException
+	 *             if no row matches the predicate or if the specified column is not
+	 *             found
+	 */
+	public CsvMother withoutRow(Predicate<Row> predicate) {
+		rows.stream()
+				.filter(predicate)
+				.findFirst()
+				.ifPresentOrElse(
+						rows::remove,
+						() -> {
+							throw new IllegalArgumentException("No row found matching the given predicate");
+						});
+		return this;
+	}
+
+	/**
 	 * Modifies the value of a specific column in an existing row identified by its
 	 * index.
 	 *
