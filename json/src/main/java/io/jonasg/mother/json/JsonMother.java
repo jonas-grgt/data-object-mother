@@ -1,12 +1,11 @@
 package io.jonasg.mother.json;
 
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JsonPointer;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 
@@ -21,7 +20,7 @@ import java.io.IOException;
  * <p>
  * Example usage:
  * </p>
- * 
+ *
  * <pre>
  * var builder = JsonMother.of("data/book.json");
  * String json = builder
@@ -75,12 +74,11 @@ public class JsonMother {
 	 * @param jsonPointer
 	 *            the path to the property to set, using
 	 *            <a href="https://tools.ietf.org/html/rfc6901">RFC 6901 JSON
-	 *            Pointer</a>
-	 *            notation (e.g., "/author/name" or "/genres/0/type")
+	 *            Pointer</a> notation (e.g., "/author/name" or "/genres/0/type")
 	 * @param value
-	 *            the value to set at the specified path; can be a primitive type,
-	 *            a String, or any object that can be converted to JSON using
-	 *            Jackson's ObjectMapper
+	 *            the value to set at the specified path; can be a primitive type, a
+	 *            String, or any object that can be
+	 *            converted to JSON using Jackson's ObjectMapper
 	 * @return the current JsonMother instance for method chaining
 	 */
 	public JsonMother withProperty(String jsonPointer, @Nullable Object value) {
@@ -177,8 +175,7 @@ public class JsonMother {
 	 * @param jsonPointer
 	 *            the path to the property to remove, using
 	 *            <a href="https://tools.ietf.org/html/rfc6901">RFC 6901 JSON
-	 *            Pointer</a>
-	 *            notation (e.g., "/author/name" or "/genres/0/type")
+	 *            Pointer</a> notation (e.g., "/author/name" or "/genres/0/type")
 	 * @return the current JsonMother instance for method chaining
 	 */
 	public JsonMother withRemovedProperty(String jsonPointer) {
@@ -217,16 +214,12 @@ public class JsonMother {
 
 	/**
 	 * Builds the final JSON string representation of the modified JSON structure.
-	 * 
+	 *
 	 * @return a pretty-printed JSON string representing the current state of the
 	 *         JSON structure
 	 */
 	public String build() {
-		try {
-			return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException("Failed to serialize JSON", e);
-		}
+		return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
 	}
 
 	private void setRootValue(@Nullable Object value) {
