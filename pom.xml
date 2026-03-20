@@ -47,7 +47,8 @@
         <assertj-core.version>3.27.7</assertj-core.version>
         <jsonassert.version>1.5.3</jsonassert.version>
         <xmlunit.version>2.10.2</xmlunit.version>
-        <jackson.version>2.21.1</jackson.version>
+        <jackson-dataformat.version>3.1.0</jackson-dataformat.version>
+		<jackson-core.version>3.1.0</jackson-core.version>
         <opencsv.version>5.12.0</opencsv.version>
         <jspecify.version>1.0.0</jspecify.version>
 
@@ -67,14 +68,14 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
+				<groupId>tools.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+                <version>${jackson-core.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <groupId>tools.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-xml</artifactId>
-                <version>${jackson.version}</version>
+                <version>${jackson-dataformat.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jspecify</groupId>
