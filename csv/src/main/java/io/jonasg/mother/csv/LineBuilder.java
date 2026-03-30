@@ -11,7 +11,7 @@ public class LineBuilder {
 		return this;
 	}
 
-	public String build() {
-		return String.join(",", columns);
+	public String[] build() {
+		return columns.toArray(new String[0]);
 	}
 }
