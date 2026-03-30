@@ -1,15 +1,19 @@
 package io.jonasg.mother.csv;
 
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * A utility class for building CSV content as a string based on an existing CSV
@@ -20,9 +24,16 @@ public class CsvMother {
 
 	private final List<Row> rows = new ArrayList<>();
 	private final List<String[]> pendingRows = new ArrayList<>();
+	private final char delimiter;
 	private String[] headers;
 
 	protected CsvMother(String filePath) {
+		this.delimiter = ',';
+		parseCsv(filePath);
+	}
+
+	protected CsvMother(String filePath, char delimiter) {
+		this.delimiter = delimiter;
 		parseCsv(filePath);
 	}
 
@@ -36,7 +47,23 @@ public class CsvMother {
 	 *         specified CSV file
 	 */
 	public static CsvMother of(String filePath) {
-		return new CsvMother(filePath);
+		return new CsvMother(filePath, ',');
+	}
+
+	/**
+	 * Creates a new CsvMother instance by loading a CSV file from the classpath.
+	 *
+	 * @param filePath
+	 *            the path to the CSV file in the classpath (e.g.,
+	 *            "data/sample.csv")
+	 * @param delimiter
+	 *            delimiter used for the csv format (e.g., comma: ',', semicolon:
+	 *            ';')
+	 * @return a new CsvMother instance initialized with the content of the
+	 *         specified CSV file
+	 */
+	public static CsvMother of(String filePath, char delimiter) {
+		return new CsvMother(filePath, delimiter);
 	}
 
 	/**
@@ -49,7 +76,7 @@ public class CsvMother {
 	 * @return the current CsvMother instance for method chaining
 	 */
 	public CsvMother withRow(String line) {
-		pendingRows.add(line.split(","));
+		pendingRows.add(split(line));
 		return this;
 	}
 
@@ -66,8 +93,10 @@ public class CsvMother {
 	public CsvMother withRow(Consumer<LineBuilder> columnBuilderConsumer) {
 		var lineBuilder = new LineBuilder();
 		columnBuilderConsumer.accept(lineBuilder);
-		String[] values = lineBuilder.build().split(",", -1);
-		pendingRows.add(values);
+		pendingRows.add(lineBuilder.build());
+		// String[] values =
+		// lineBuilder.build().split(Pattern.quote(String.valueOf(delimiter)), -1);
+		// pendingRows.add(values);
 		return this;
 	}
 
@@ -163,17 +192,20 @@ public class CsvMother {
 	/**
 	 * Builds the final CSV content as a string, including the headers and all rows
 	 * (both modified existing rows and newly added rows).
-	 * 
+	 *
 	 * @return a string representation of the customized CSV content
 	 */
 	public String build() {
+		var delimiterString = String.valueOf(delimiter);
 		var sb = new StringBuilder();
 
-		sb.append(String.join(",", headers));
+		sb.append(String.join(delimiterString, headers));
 
-		rows.forEach(r -> sb.append("\n").append(String.join(",", r.values())));
+		rows.forEach(r -> sb.append("\n")
+				.append(String.join(delimiterString, r.values())));
 
-		pendingRows.forEach(r -> sb.append("\n").append(String.join(",", r)));
+		pendingRows.forEach(r -> sb.append("\n")
+				.append(String.join(delimiterString, r)));
 
 		return sb.toString();
 	}
@@ -196,7 +228,13 @@ public class CsvMother {
 			if (is == null) {
 				throw new RuntimeException("Unable to open file " + filePath);
 			}
-			var allLines = new CSVReader(new java.io.InputStreamReader(is, StandardCharsets.UTF_8))
+
+			var parser = new CSVParserBuilder().withSeparator(delimiter).build();
+
+			var allLines = new CSVReaderBuilder(
+					new InputStreamReader(is, StandardCharsets.UTF_8))
+					.withCSVParser(parser)
+					.build()
 					.readAll();
 
 			if (!allLines.isEmpty()) {
@@ -208,5 +246,9 @@ public class CsvMother {
 		} catch (IOException | CsvException e) {
 			throw new RuntimeException("Error parsing CSV", e);
 		}
+	}
+
+	private String[] split(String line) {
+		return line.split(Pattern.quote(String.valueOf(delimiter)), -1);
 	}
 }
