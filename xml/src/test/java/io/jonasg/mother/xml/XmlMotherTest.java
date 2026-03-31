@@ -174,4 +174,31 @@ class XmlMotherTest {
 		// then
 		XmlAssert.assertThat(actual).valueByXPath("//author/@type").isEqualTo("novelist");
 	}
+
+	@Test
+	void loadFromClassRelativePath() {
+		// given
+		var builder = XmlMother.of(XmlMotherTest.class, "package-book.xml");
+
+		// when
+		String actual = builder.build();
+
+		// then
+		XmlAssert.assertThat(actual).valueByXPath("//title").isEqualTo("Package Test Book");
+	}
+
+	@Test
+	void throwsWhenFileNotFoundInPackage() {
+		assertThatThrownBy(() -> XmlMother.of(XmlMotherTest.class, "nonexistent.xml"))
+				.isInstanceOf(RuntimeException.class)
+				.hasMessageStartingWith("Error parsing XML")
+				.hasCauseInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void throwsWhenFilePathIsGiven() {
+		assertThatThrownBy(() -> XmlMother.of(XmlMotherTest.class, "path/to/file.xml"))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("File name must not contain path separators");
+	}
 }

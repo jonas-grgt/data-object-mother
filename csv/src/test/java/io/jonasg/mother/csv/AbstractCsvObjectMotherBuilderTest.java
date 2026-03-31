@@ -208,6 +208,57 @@ class AbstractCsvObjectMotherBuilderTest {
 					.isInstanceOf(IllegalArgumentException.class)
 					.hasMessageContaining("No row found matching the given predicate");
 		}
+
+		@Test
+		void loadFromClassRelativePath() {
+			// given
+			var libraryBuilder = CsvMother.of(AbstractCsvObjectMotherBuilderTest.class, "package-books.csv");
+
+			// when
+			String actual = libraryBuilder.build();
+
+			// then
+			assertThat(actual).isEqualTo("""
+					author,title
+					Test Author,Test Book""");
+		}
+
+		@Test
+		void throwsWhenFileNotFoundInPackage() {
+			assertThatThrownBy(() -> CsvMother.of(AbstractCsvObjectMotherBuilderTest.class, "nonexistent.csv"))
+					.isInstanceOf(RuntimeException.class)
+					.hasMessageContaining("nonexistent.csv");
+		}
+
+		@Test
+		void throwsWhenFilePathIsGiven() {
+			assertThatThrownBy(() -> CsvMother.of(AbstractCsvObjectMotherBuilderTest.class, "path/to/file.csv"))
+					.isInstanceOf(IllegalArgumentException.class)
+					.hasMessageContaining(
+							"When Loading file relative to class, the file name must not contain path separators:");
+		}
+
+		@Test
+		void loadFromClassRelativePathWithDelimiter() {
+			// given
+			var libraryBuilder = CsvMother.of(AbstractCsvObjectMotherBuilderTest.class, "package-books.csv", ',');
+
+			// when
+			String actual = libraryBuilder.build();
+
+			// then
+			assertThat(actual).isEqualTo("""
+					author,title
+					Test Author,Test Book""");
+		}
+
+		@Test
+		void throwsWhenFilePathIsGivenWithDelimiter() {
+			assertThatThrownBy(() -> CsvMother.of(AbstractCsvObjectMotherBuilderTest.class, "path/to/file.csv", ';'))
+					.isInstanceOf(IllegalArgumentException.class)
+					.hasMessageContaining(
+							"When Loading file relative to class, the file name must not contain path separators:");
+		}
 	}
 
 	@Nested

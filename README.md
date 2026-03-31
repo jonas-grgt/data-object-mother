@@ -20,9 +20,22 @@ components in your Java applications.
 </dependency>
 ```
 
+#### Usage
+
+Load JSON from file and modify properties using JSON Pointer (RFC 6901)
 ```java
-// Load JSON from file and modify properties using JSON Pointer (RFC 6901)
 String json = JsonMother.of("book.json")
+    .withProperty("/title", "New Title")
+    .withProperty("/author/name", "Jane Doe")
+    .withProperty("/tags/0", "fiction")
+    .withRemovedProperty("/deprecatedField")
+    .build();
+```
+
+Load JSON relative from given class.
+If class is in package com.example, it will look for resource at /com/example/book.json
+```java
+String json = JsonMother.of(getClass(), "book.json")
     .withProperty("/title", "New Title")
     .withProperty("/author/name", "Jane Doe")
     .withProperty("/tags/0", "fiction")
@@ -134,10 +147,27 @@ String csv = CsvMother.of("books.csv")
     .withRowColumnValue(0, "title", "New Title")
     .withRow("New Author,New Book,New Genre")
     .build();
+
+// Load CSV with custom delimiter (semicolon)
+String csv = CsvMother.of("books.csv", ';')
+    .build();
+
+// Load CSV relative from given class.
+// If class is in package com.example, it will look for resource at /com/example/books.csv
+String csv = CsvMother.of(getClass(), "books.csv")
+    .build();
+
+// Load CSV relative to class with custom delimiter
+String csv = CsvMother.of(getClass(), "books.csv", ';')
+    .build();
 ```
 
 #### Available methods 🔧
 
+- `of(String filePath)` - Load CSV from file path
+- `of(String filePath, char delimiter)` - Load CSV with custom delimiter
+- `of(Class<?> clazz, String fileName)` - Load CSV relative to class's package
+- `of(Class<?> clazz, String fileName, char delimiter)` - Load CSV relative to class's package with custom delimiter
 - `withRow(String line)` - Add a new row using a comma-separated string
 - `withRow(Consumer<LineBuilder> columnBuilder)` - Add a new row using a builder pattern
 - `withRowColumnValue(Integer rowIndex, String column, Object value)` - Modify a column value by 0-based row index

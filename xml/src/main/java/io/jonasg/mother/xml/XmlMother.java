@@ -60,6 +60,30 @@ public class XmlMother {
 	}
 
 	/**
+	 * Creates a new XmlMother instance by loading an XML file relative to the
+	 * given class's package directory on the classpath.
+	 *
+	 * @param clazz
+	 *            the class to use as a reference point for resolving the file path
+	 * @param fileName
+	 *            the name of the XML file (e.g., "book.xml"); will be resolved
+	 *            relative to the package of the given class
+	 * @return a new XmlMother instance initialized with the content of the
+	 *         specified XML file
+	 * @throws IllegalArgumentException
+	 *             if the file name contains path separators, or if the file
+	 *             cannot be found
+	 */
+	public static XmlMother of(Class<?> clazz, String fileName) {
+		if (fileName.contains("/")) {
+			throw new IllegalArgumentException("File name must not contain path separators: " + fileName);
+		}
+		String packagePath = clazz.getPackageName().replace('.', '/');
+		String filePath = packagePath + "/" + fileName;
+		return new XmlMother(filePath);
+	}
+
+	/**
 	 * Sets the text content of an element or attribute specified by an XPath
 	 * expression.
 	 * <p>

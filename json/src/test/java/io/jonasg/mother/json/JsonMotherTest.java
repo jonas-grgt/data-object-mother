@@ -1,10 +1,12 @@
 package io.jonasg.mother.json;
 
 import org.json.JSONException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
 class JsonMotherTest {
@@ -453,6 +455,37 @@ class JsonMotherTest {
 				  }
 				}
 				""", actual, true);
+	}
+
+	@Test
+	void loadFromClassRelativePath() throws JSONException {
+		var builder = JsonMother.of(JsonMotherTest.class, "package-book.json");
+
+		String actual = builder
+				.withProperty("/id", 999)
+				.build();
+
+		assertEquals("""
+				{
+				  "id": 999,
+				  "title": "Package Test Book"
+				}
+				""", actual, true);
+	}
+
+	@Test
+	void throwsWhenFilePathIsGiven() {
+		var message = assertThrows(IllegalArgumentException.class,
+				() -> JsonMother.of(JsonMotherTest.class, "file/path.json")).getMessage();
+
+		Assertions.assertEquals(
+				"When Loading file relative to class, the file name must not contain path separators: file/path.json",
+				message);
+	}
+
+	@Test
+	void throwsWhenFileNotFoundInPackage() {
+		assertThrows(IllegalArgumentException.class, () -> JsonMother.of(JsonMotherTest.class, "nonexistent.json"));
 	}
 
 	@SuppressWarnings("unused")

@@ -67,6 +67,59 @@ public class CsvMother {
 	}
 
 	/**
+	 * Creates a new CsvMother instance by loading a CSV file relative to the
+	 * given class's package directory on the classpath.
+	 *
+	 * @param clazz
+	 *            the class to use as a reference point for resolving the file path
+	 * @param fileName
+	 *            the name of the CSV file (e.g., "book.csv"); will be resolved
+	 *            relative to the package of the given class
+	 * @return a new CsvMother instance initialized with the content of the
+	 *         specified CSV file
+	 * @throws IllegalArgumentException
+	 *             if the file name contains path separators, or if the file
+	 *             cannot be found
+	 */
+	public static CsvMother of(Class<?> clazz, String fileName) {
+		if (fileName.contains("/")) {
+			throw new IllegalArgumentException(
+					"When Loading file relative to class, the file name must not contain path separators: " + fileName);
+		}
+		String packagePath = clazz.getPackageName().replace('.', '/');
+		String filePath = packagePath + "/" + fileName;
+		return new CsvMother(filePath);
+	}
+
+	/**
+	 * Creates a new CsvMother instance by loading a CSV file relative to the
+	 * given class's package directory on the classpath.
+	 *
+	 * @param clazz
+	 *            the class to use as a reference point for resolving the file path
+	 * @param fileName
+	 *            the name of the CSV file (e.g., "book.csv"); will be resolved
+	 *            relative to the package of the given class
+	 * @param delimiter
+	 *            delimiter used for the csv format (e.g., comma: ',', semicolon:
+	 *            ';')
+	 * @return a new CsvMother instance initialized with the content of the
+	 *         specified CSV file
+	 * @throws IllegalArgumentException
+	 *             if the file name contains path separators, or if the file
+	 *             cannot be found
+	 */
+	public static CsvMother of(Class<?> clazz, String fileName, char delimiter) {
+		if (fileName.contains("/")) {
+			throw new IllegalArgumentException(
+					"When Loading file relative to class, the file name must not contain path separators: " + fileName);
+		}
+		String packagePath = clazz.getPackageName().replace('.', '/');
+		String filePath = packagePath + "/" + fileName;
+		return new CsvMother(filePath, delimiter);
+	}
+
+	/**
 	 * Adds a new row to the CSV content based on a comma-separated string.
 	 * The values in the string will be split by commas and added as a new row.
 	 *
