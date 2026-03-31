@@ -55,8 +55,39 @@ public class JsonMother {
 	 *             if there is an error processing the JSON content
 	 */
 	public static JsonMother of(String filePath) {
+		return of(JsonMother.class.getClassLoader(), filePath);
+	}
+
+	/**
+	 * Creates a new JsonMother instance by loading a JSON file relative to the
+	 * given class's package directory on the classpath.
+	 *
+	 * @param clazz
+	 *            the class to use as a reference point for resolving the file path
+	 * @param fileName
+	 *            the name of the JSON file (e.g., "book.json"); will be resolved
+	 *            relative to the package of the given class
+	 * @return a new JsonMother instance initialized with the content of the
+	 *         specified JSON file
+	 * @throws IllegalArgumentException
+	 *             if the file cannot be found, or if the content is not a JSON
+	 *             object
+	 * @throws RuntimeException
+	 *             if there is an error processing the JSON content
+	 */
+	public static JsonMother of(Class<?> clazz, String fileName) {
+		if (fileName.contains("/")) {
+			throw new IllegalArgumentException(
+					"When Loading file relative to class, the file name must not contain path separators: " + fileName);
+		}
+		String packagePath = clazz.getPackageName().replace('.', '/');
+		String filePath = packagePath + "/" + fileName;
+		return of(clazz.getClassLoader(), filePath);
+	}
+
+	private static JsonMother of(ClassLoader classLoader, String filePath) {
 		var mapper = new ObjectMapper();
-		try (var is = JsonMother.class.getClassLoader().getResourceAsStream(filePath)) {
+		try (var is = classLoader.getResourceAsStream(filePath)) {
 			if (is == null) {
 				throw new IllegalArgumentException("Resource not found: " + filePath);
 			}
