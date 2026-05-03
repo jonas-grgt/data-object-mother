@@ -55,7 +55,7 @@
         <jreleaser.version>1.22.0</jreleaser.version>
 
         <maven-spotless-plugin.version>2.41.1</maven-spotless-plugin.version>
-        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+        <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
     </properties>
 
     <dependencyManagement>
