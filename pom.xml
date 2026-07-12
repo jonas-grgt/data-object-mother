@@ -52,7 +52,7 @@
         <opencsv.version>5.12.0</opencsv.version>
         <jspecify.version>1.0.0</jspecify.version>
 
-        <jreleaser.version>1.24.0</jreleaser.version>
+        <jreleaser.version>1.25.0</jreleaser.version>
 
         <maven-spotless-plugin.version>3.8.0</maven-spotless-plugin.version>
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
