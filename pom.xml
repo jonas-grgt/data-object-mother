@@ -50,7 +50,7 @@
         <jackson-dataformat.version>3.2.1</jackson-dataformat.version>
 		<jackson-core.version>3.2.1</jackson-core.version>
         <opencsv.version>5.12.0</opencsv.version>
-        <jspecify.version>1.0.0</jspecify.version>
+        <jspecify.version>1.0.1</jspecify.version>
 
         <jreleaser.version>1.25.0</jreleaser.version>
 
